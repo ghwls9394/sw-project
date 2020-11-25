@@ -66,42 +66,23 @@ def scoreScreen(screen, clock, scr_width, scr_height, music_paused):
                 if click[0]==1:
                     if i==0:
                         #print("score --")
-                        limit[0] = limit[0] - 1
+                        if limit[0]==1:
+                            continue
+                        else:
+                            limit[0] = limit[0] - 1
                         
                     else:
                         #print("round --")
-                        limit[1] = limit[1] - 1        
+                        if limit[1]==1:
+                            continue
+                        else:
+                            limit[1] = limit[1] - 1        
             else:
                 pygame.draw.polygon(screen,const.BLACK,[[xy[0]+50,xy[1]],[xy[0]+50,xy[1]+50],[xy[0],xy[1]+25]])#맨 위 왼쪽 삼각형
             pygame.draw.rect(screen, const.WHITE,[550,130,90,50])# 그사이의 사각형
             screen.blit(score_text,(585,140))
             screen.blit(round_text,(585,410))
             i = i+1
-
-        """
-        # positions of four boxes
-        pos_of_boxes = [[200, 50], [scr_width-500, 50], [200, scr_height / 2 - 50], [scr_width - 500,
-                                                                                     scr_height / 2 - 50]]
-
-        # This loop will draw the four boxes
-        i = 0
-        for xy in pos_of_boxes:
-            if (mouse[0] > xy[0]) and (mouse[0] < xy[0] + 300) and (mouse[1] > xy[1]) and (mouse[1] < xy[1] + 150):
-                pygame.draw.rect(screen, theme_colors[i][0], (xy[0], xy[1], 300, 150), 0)  # rect fill
-                if click[0] == 1:
-                    selected_color = theme_colors[i][0]
-            else:
-                pygame.draw.rect(screen, theme_colors[i][1], (xy[0], xy[1], 300, 150), 0)   # rect fill
-            pygame.draw.rect(screen, const.WHITE, (xy[0], xy[1], 300, 150), 2)  # rect border
-            pygame.draw.circle(screen, const.WHITE, (int(xy[0] + 150), int(xy[1] + 75)), 30, 2)   # middle circle
-
-            pygame.draw.line(screen, const.WHITE, (xy[0] + 150, xy[1]), (xy[0] + 150, xy[1] + 150), 2)  # middle line
-
-            pygame.draw.rect(screen, const.WHITE, (xy[0], xy[1] + 30, 50, 95), 2)   # left small rect
-            pygame.draw.rect(screen, const.WHITE, (xy[0] + 300 - 50, xy[1] + 30, 50, 95), 2)    # right small rect
-            i = i+1
-        #4개의 박스를 그리는 코드
-        """
 
         # displaying the selected color
         
