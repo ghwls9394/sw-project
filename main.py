@@ -4,6 +4,7 @@ from pygame.locals import *
 from paddle import Paddle
 from puck import Puck
 from goalitem import Goalitem#추가
+from scoreScreen import scoreScreen
 from startScreen import air_hockey_start, disp_text
 from themeScreen import theme_screen
 from globals import *
