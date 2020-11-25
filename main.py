@@ -1,22 +1,24 @@
 import sys
+import random as rand #추가
 from pygame.locals import *
 from paddle import Paddle
 from puck import Puck
+from goalitem import Goalitem#추가
 from startScreen import air_hockey_start, disp_text
 from themeScreen import theme_screen
 from globals import *
 from endScreen import game_end
 
 # Globals, initialized in method `init()`
-
 # Create game objects.
-paddle1 = Paddle(const.PADDLE1X, const.PADDLE1Y)
-paddle2 = Paddle(const.PADDLE2X, const.PADDLE2Y)
+paddle1 = Paddle(const.PADDLE1X, const.PADDLE1Y,const.PADDLE_SIZEA)
+paddle2 = Paddle(const.PADDLE2X, const.PADDLE2Y,const.PADDLE_SIZEB)
 puck = Puck(width / 2, height / 2)
+goalitem=Goalitem(width * rand.random(),height * rand.random())#추가
 
 
 def init():
-    global paddleHit, goal_whistle, clock, screen, smallfont, roundfont
+    global paddleHit, goal_whistle, clock, screen, smallfont, roundfont,item_sound
     pygame.mixer.pre_init(44100, -16, 2, 2048)
     pygame.mixer.init()
     pygame.init()
@@ -26,6 +28,8 @@ def init():
     pygame.display.set_caption('Air Hockey')
     screen = pygame.display.set_mode((width, height))
 
+    #item_sound=pygame.mixer.Sound(os.path.join(auxDirectory, 'item.wav'))
+    item_sound=pygame.mixer.Sound(os.path.join(auxDirectory, 'item.wav'))
     paddleHit = pygame.mixer.Sound(os.path.join(auxDirectory, 'hit.wav'))
     goal_whistle = pygame.mixer.Sound(os.path.join(auxDirectory, 'goal.wav'))
 
@@ -238,9 +242,14 @@ def resetround(player):
 
 
 def reset_game(speed, player):
+    const.PADDLE_SIZEA=40#추가
+    const.PADDLE_SIZEB=40#추가
+    paddle1.radius=const.PADDLE_SIZEA#추가
+    paddle2.radius=const.PADDLE_SIZEB#추가
     puck.reset(speed, player)
     paddle1.reset(22, height / 2)
     paddle2.reset(width - 20, height / 2)
+    goalitem.reset(width * rand.random(),height * rand.random())#추가
 
 
 def inside_goal(side):
@@ -251,6 +260,10 @@ def inside_goal(side):
     if side == 1:
         return (puck.x + puck.radius >= width) and (puck.y >= const.GOAL_Y1) and (puck.y <= const.GOAL_Y2)
 
+def redraw_A():
+    paddle1.radius=const.PADDLE_SIZEA#변경
+def redraw_B():
+    paddle2.radius=const.PADDLE_SIZEB#변경 const.PADDLE_SIZE를 A와 B로 나눔.
 
 # Game Loop
 def game_loop(speed, player1_color, player2_color, background_color, player_1_name, player_2_name):
@@ -329,16 +342,49 @@ def game_loop(speed, player1_color, player2_color, background_color, player_1_na
 
         # time period between two consecutive frames.
         time_delta = clock.get_time() / 1000.0
+
+        
+        #아이템 범위 추가
+        goalitem.check_vertical_bounds(height)
+        goalitem.check_boundary(width)
+        if goalitem.effect_A(paddle1) :
+           redraw_A()
+           goalitem.x=width *rand.random()
+           goalitem.y=height *rand.random()
+           screen.blit(goalitem.image,(int(goalitem.x),int(goalitem.y)))
+           pygame.display.update()
+           if not music_paused:
+               pygame.mixer.Sound.play(item_sound)
+
+        if goalitem.effect_B(paddle2):
+            redraw_B()
+            goalitem.x=width *rand.random()
+            goalitem.y=height *rand.random()
+            screen.blit(goalitem.image,(int(goalitem.x),int(goalitem.y)))
+            pygame.display.update()
+            if not music_paused:
+                pygame.mixer.Sound.play(item_sound)
+           
+           #del goalitem
+
+
+
         
         # Update Paddle1
         paddle1.move(w, s, a, d, time_delta)
         paddle1.check_vertical_bounds(height)
         paddle1.check_left_boundary(width)
 
+        if paddle1.collision_with_paddle(paddle2) and not music_paused:
+            pygame.mixer.Sound.play(paddleHit)
+
         # Update Paddle2
         paddle2.move(up, down, left, right, time_delta)
         paddle2.check_vertical_bounds(height)
         paddle2.check_right_boundary(width)
+
+        if paddle2.collision_with_paddle(paddle1) and not music_paused:#패들 충돌 및 소리까지
+             pygame.mixer.Sound.play(paddleHit)
 
         puck.move(time_delta)
         
@@ -365,7 +411,7 @@ def game_loop(speed, player1_color, player2_color, background_color, player_1_na
         if puck.collision_paddle(paddle2) and not music_paused:
             pygame.mixer.Sound.play(paddleHit)
 
-        # Update round points
+        # Update round points 
         if score1 == const.SCORE_LIMIT:
             if not rounds_p1 + 1 == const.ROUND_LIMIT:
                 notify_round_change()
@@ -406,6 +452,7 @@ def game_loop(speed, player1_color, player2_color, background_color, player_1_na
             rounds(rounds_p1, rounds_p2, round_no)
 
         # drawing the paddle and the puck reset
+        screen.blit(goalitem.image,(int(goalitem.x),int(goalitem.y)))
         paddle1.draw(screen, player1_color)
         paddle2.draw(screen, player2_color)
         puck.draw(screen)

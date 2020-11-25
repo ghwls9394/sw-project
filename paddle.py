@@ -4,10 +4,10 @@ import constants as const
 
 
 class Paddle:#패들의 위치와 이동속도,질량,반경,각도를 초기화 해주는 메서드
-    def __init__(self, x, y):
+    def __init__(self, x, y,s):
         self.x = x
         self.y = y
-        self.radius = const.PADDLE_SIZE
+        self.radius = s#변경 const.PADDLE_SIZE에서 s로 변경
         self.speed = const.PADDLE_SPEED
         self.mass = const.PADDLE_MASS
         self.angle = 0
@@ -25,15 +25,19 @@ class Paddle:#패들의 위치와 이동속도,질량,반경,각도를 초기화
         #메서드
         if self.x - self.radius <= 0:
             self.x = self.radius
-        elif self.x + self.radius > int(width / 2):
-            self.x = int(width / 2) - self.radius
+       # elif self.x + self.radius > int(width / 2):
+            #self.x = int(width / 2) - self.radius #->원래
+        elif self.x + self.radius > width:#->추가
+            self.x = width - self.radius
 
     def check_right_boundary(self, width):#플레이어 2 패들의 경계선이 경기장 오른쪽 테두리가 되게끔 설정해주는
         #메서드
         if self.x + self.radius > width:
             self.x = width - self.radius
-        elif self.x - self.radius < int(width / 2):
-            self.x = int(width / 2) + self.radius
+       # elif self.x - self.radius < int(width / 2):
+           # self.x = int(width / 2) + self.radius #->원래
+        elif self.x - self.radius <= 0:
+            self.x = self.radius
 
     def move(self, up, down, left, right, time_delta):#패들이 사용자의 키보드 입력에 따라
         #상하좌우와 대각선으로 이동하도록 해주는 메서드
@@ -45,6 +49,58 @@ class Paddle:#패들의 위치와 이동속도,질량,반경,각도를 초기화
         dy = self.y - dy
 
         self.angle = math.atan2(dy, dx)
+
+    def add_vectors(self, angle1, length1, angle2, length2):
+       
+        x = math.sin(angle1) * length1 + math.sin(angle2) * length2
+        y = math.cos(angle1) * length1 + math.cos(angle2) * length2
+        
+        length = math.hypot(x, y)
+        angle = math.pi / 2 - math.atan2(y, x)
+
+        return angle, length     
+
+    def collision_with_paddle(self, paddle):#퍽이 패들과 충돌했을 때 add_vectors메서드를 이용하여
+        #퍽의 다음 진행방향과 속도를 정하고 ,충돌후 패들의 이동속도를 정해주고, 또 퍽과 패들이 달라붙지 않게 하는 등
+        #퍽과 패들의 충돌 후 상황을 다루는 메서드. ->새로추가
+        """
+        Checks collision between circles using the distance formula:
+        distance = sqrt(dx**2 + dy**2)
+        """
+        dx = self.x - paddle.x
+        dy = self.y - paddle.y
+
+        # distance between the centers of the circle
+        distance = math.hypot(dx, dy)#distance는 퍽과 패들의 거리
+
+        # no collision takes place.
+        if distance > self.radius + paddle.radius:
+            return False
+
+        # calculates angle of projection.
+        tangent = math.atan2(dy, dx)
+        temp_angle = math.pi / 2 + tangent
+        total_mass = self.mass + paddle.mass
+        
+        
+        # new vector for paddle without changing the speed.
+        vec_a = (paddle.angle, paddle.speed * (paddle.mass - self.mass) / total_mass)
+        vec_b = (temp_angle + math.pi, 2 * self.speed * self.mass / total_mass)
+
+        temp_speed = paddle.speed
+        (paddle.angle, paddle.speed) = self.add_vectors(*vec_a, *vec_b)
+        paddle.speed = temp_speed
+        #이 구문에 paddle speed를 100을 넣으면 퍽과 패들이 충돌했을떄 패들의 속도가 줄어듬.
+        #이구문이없으면 paddle이 퍽과 충돌 후 속도가 변할 수 있음
+
+        
+        # To prevent puck and paddle from sticking.
+        offset = 0.5 * (self.radius + paddle.radius - distance + 1)
+        self.x += math.sin(temp_angle) * offset
+        self.y -= math.cos(temp_angle) * offset
+        paddle.x -= math.sin(temp_angle) * offset
+        paddle.y += math.cos(temp_angle) * offset
+        return True     
 
     def draw(self, screen, color):#화면에 패들을 초기화 시킨 위치와 반경 ,색상 값을 가지고 위치시킨다.
         position = (int(self.x), int(self.y))
