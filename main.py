@@ -472,6 +472,11 @@ if __name__ == "__main__":
             screen, clock, width, height, mute)
         background_color = theme_screen(screen, clock, width, height, mute)
         init()
+        """
+        주의: 다음 라인애서 const값을 변경합니다.
+        """
+        const.SCORE_LIMIT,const.ROUND_LIMIT = scoreScreen(screen, clock, width, height, mute)#게임 스코어방식
+        init()
         if gameChoice == 1:
             puck.speed = const.EASY
             game_loop(const.EASY, player1_color, player2_color, background_color, player_1_name, player_2_name)
