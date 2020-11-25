@@ -6,6 +6,7 @@ from puck import Puck
 from goalitem import Goalitem#추가
 from startScreen import air_hockey_start, disp_text
 from themeScreen import theme_screen
+from scoreScreen import * #추가?? 
 from globals import *
 from endScreen import game_end
 
@@ -428,7 +429,7 @@ def game_loop(speed, player1_color, player2_color, background_color, player_1_na
             score1, score2 = 0, 0
             resetround(2)
 
-        # playing area should be drawn first
+        # playing area should be drawn first score
         render_field(background_color)
 
         # show score
